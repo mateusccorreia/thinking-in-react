@@ -1,5 +1,7 @@
-export default function Home() {
-}
+// export default function Home() {
+// }
+
+import { useState } from "react";
 
 function ProductCategoryRow({category}) {
   return(
@@ -31,11 +33,21 @@ function ProductRow({product}) {
   )
 }
 
-function ProductTable({products}) {
+function ProductTable({products, filterText, inStockOnly}) {
   const rows = [];
   let lastCategory = null;
 
   products.forEach((product) => {
+    if (
+      product.name.toLowerCase().indexOf(
+        filterText.toLowerCase()
+      ) === -1
+    ) {
+      return;
+    }
+    if (inStockOnly && !product.stocked) {
+      return;
+    }
     if (product.category !== lastCategory) {
       rows.push(
         <ProductCategoryRow 
@@ -69,6 +81,47 @@ function ProductTable({products}) {
   )
 }
 
+function SearchBar({filterText, inStockOnly, onFilterTextChange, onInSotckOnlyChange}) {
+  return(
+    <form>
+      <input 
+      type="text" 
+      value={filterText}
+      placeholder="Searching..."
+      onChange={(e) => onFilterTextChange(e.target.value)}
+      />
+      <label>
+        <input
+        type="checkbox"
+        checked={inStockOnly}
+        onChange={(e) => onInSotckOnlyChange(e.target.checked)}
+        />
+        {' '}
+        Only show products in stock
+      </label>
+    </form>
+  );
+}
+
+function FilterableProductTable({products}) {
+  const [filterText, setFilterText] = useState('');
+  const [inStockOnly, setInStockOnly] = useState(false);
+
+  return(
+    <>
+      <SearchBar 
+        filterText={filterText}
+        inStockOnly={inStockOnly} 
+        onFilterTextChange={setFilterText}
+        onInSotckOnlyChange={setInStockOnly} />
+      <ProductTable 
+        products={products}
+        filterText={filterText}
+        inStockOnly={inStockOnly} />
+    </>
+  );
+}
+
 const allProducts = [
   { category: "Fruits", price: "$1", stocked: true, name: "Apple" },
   { category: "Fruits", price: "$1", stocked: true, name: "Dragonfruit" },
@@ -77,3 +130,9 @@ const allProducts = [
   { category: "Vegetables", price: "$4", stocked: false, name: "Pumpkin" },
   { category: "Vegetables", price: "$1", stocked: true, name: "Peas" }
 ]
+
+export default function App() {
+  return(
+    <FilterableProductTable products={allProducts} />
+  )
+}
